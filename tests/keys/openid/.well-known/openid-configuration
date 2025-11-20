@@ -1,3 +1,3 @@
 {
-  "jwks_uri": "file://../../jwks_keyring.json"
+  "jwks_uri": "file:///home/iggyvolz/libjwt/tests/keys/jwks_keyring.json"
 }
