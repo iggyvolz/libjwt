@@ -206,13 +206,18 @@ static jwt_claims_t __verify_claims(jwt_t *jwt)
 }
 
 /* This is after parsing and possibly a user callback. */
-static int __verify_config_post(jwt_t *jwt, const jwt_config_t *config,
+static int __verify_config_post(jwt_t *jwt, jwt_config_t *config,
 				unsigned int sig_len)
 {
 	/* Yes, we do this before checking a signature. */
-	if (__verify_claims(jwt)) {
-		/* TODO Pass back the ORd list of claims failed. */
-		jwt_write_error(jwt, "Failed one or more claims");
+	int failed = __verify_claims(jwt);
+	if (failed) {
+		const char* failed_iss = (failed & JWT_CLAIM_ISS) ? "iss, " : "";
+		const char* failed_aud = (failed & JWT_CLAIM_AUD) ? "aud, " : "";
+		const char* failed_sub = (failed & JWT_CLAIM_SUB) ? "sub, " : "";
+		const char* failed_nbf = (failed & JWT_CLAIM_NBF) ? "nbf, " : "";
+		const char* failed_exp = (failed & JWT_CLAIM_EXP) ? "exp, " : "";
+		jwt_write_error(jwt, "Failed claims: %s%s%s%s%s", failed_iss, failed_aud, failed_sub, failed_nbf, failed_exp);
 		return 1;
 	}
 
@@ -234,9 +239,35 @@ static int __verify_config_post(jwt_t *jwt, const jwt_config_t *config,
 	}
 
 	if (config->key == NULL) {
-		jwt_write_error(jwt,
-			"JWT has signature, but no key was given");
-		return 1;
+		if (config->load_openid) {
+			// Attempt to load config->key from openid
+			jwt_value_t issuer_claim;
+			jwt_set_GET_STR(&issuer_claim, "iss");
+			if (jwt_claim_get(jwt, &issuer_claim) != JWT_VALUE_ERR_NONE) {
+				jwt_write_error(jwt,
+					"JWT has signature, but no key was given and issuer was invalid");
+				return 1;
+			}
+			jwt_value_t kid_header;
+			jwt_set_GET_STR(&kid_header, "kid");
+			if (jwt_header_get(jwt, &kid_header) != JWT_VALUE_ERR_NONE) {
+				jwt_write_error(jwt,
+					"JWT has signature, but no key was given and kid was invalid");
+				return 1;
+			}
+			jwk_set_t* jwk_set = jwks_create_fromopenid(issuer_claim.str_val, 2);
+			if (jwk_set == NULL) {
+				jwt_write_error(jwt,
+					"JWT has signature, but no key was given and failed to load keys from openid");
+				return 1;
+			}
+			jwk_item_t* key = jwks_find_bykid(jwk_set, kid_header.str_val);
+			config->key = key;
+		} else {
+			jwt_write_error(jwt,
+				"JWT has signature, but no key was given");
+			return 1;
+		}
 	}
 
 	/* Key is known to be given at this point */
@@ -261,7 +292,7 @@ static int __verify_config_post(jwt_t *jwt, const jwt_config_t *config,
 	return 0;
 }
 
-jwt_t *jwt_verify_complete(jwt_t *jwt, const jwt_config_t *config,
+jwt_t *jwt_verify_complete(jwt_t *jwt, jwt_config_t *config,
 			   const char *token, unsigned int payload_len)
 {
 	const char *sig;

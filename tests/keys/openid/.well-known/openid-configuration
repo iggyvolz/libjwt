@@ -1,0 +1,3 @@
+{
+  "jwks_uri": "file://../../jwks_keyring.json"
+}

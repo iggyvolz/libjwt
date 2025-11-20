@@ -380,7 +380,7 @@ int FUNC(verify)(jwt_common_t *__cmd, const char *token)
 	}
 
 	/* First parsing pass, error will be set for us */
-        if (jwt_parse(jwt, token, &payload_len)) {
+	if (jwt_parse(jwt, token, &payload_len)) {
 		jwt_copy_error(__cmd, jwt);
 		return 1;
 	};
@@ -390,13 +390,13 @@ int FUNC(verify)(jwt_common_t *__cmd, const char *token)
 	config.ctx = __cmd->c.cb_ctx;
 
 	/* Let the user handle this and update config */
-        if (__cmd->c.cb && __cmd->c.cb(jwt, &config)) {
+	if (__cmd->c.cb && __cmd->c.cb(jwt, &config)) {
 		jwt_write_error(__cmd, "User callback returned error");
 		return 1;
 	}
 
 	/* Callback may have changed this */
-        if (__setkey_check(__cmd, config.alg, config.key))
+	if (__setkey_check(__cmd, config.alg, config.key))
 		return 1;
 
 	jwt->key = config.key;

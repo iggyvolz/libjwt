@@ -235,6 +235,7 @@ typedef struct {
 	const jwk_item_t *key;	/**< A JWK to use for key	*/
 	jwt_alg_t alg;		/**< For algorithm matching	*/
 	void *ctx;		/**< User controlled context	*/
+	int load_openid; /** Whether to attempt to load key from openid if it does not exist */
 } jwt_config_t;
 
 /** @ingroup jwt_object_grp
@@ -1280,6 +1281,20 @@ jwk_set_t *jwks_load_fromfp(jwk_set_t *jwk_set, FILE *input);
 JWT_EXPORT
 jwk_set_t *jwks_load_fromurl(jwk_set_t *jwk_set, const char *url, int verify);
 
+/**
+ * @TODO document
+ * @param jwk_set
+ * @param issuer
+ * @param verify
+ * @return
+ */
+JWT_EXPORT
+jwk_set_t *jwks_load_fromopenid(jwk_set_t *jwk_set, const char *issuer, int verify);
+/**
+ * @TODO document
+ */
+JWT_EXPORT
+jwk_set_t *jwks_create_fromopenid(const char *issuer, int verify);
 /**
  * @brief Wrapper around jwks_load() that explicitly creates a new keyring
  */

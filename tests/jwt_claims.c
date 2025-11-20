@@ -59,7 +59,7 @@ START_TEST(claims_nbf_leeway)
 	ret = jwt_checker_verify(checker, out);
 	ck_assert_int_ne(ret, 0);
 	ck_assert_str_eq(jwt_checker_error_msg(checker),
-			"Failed one or more claims");
+			"Failed claims: nbf, ");
 	jwt_checker_error_clear(checker);
 
 	/* Bigger leeway */
@@ -113,7 +113,7 @@ START_TEST(claims_exp_leeway)
 	ret = jwt_checker_verify(checker, out);
 	ck_assert_int_ne(ret, 0);
 	ck_assert_str_eq(jwt_checker_error_msg(checker),
-	                "Failed one or more claims");
+	                "Failed claims: exp, ");
 	jwt_checker_error_clear(checker);
 
 	/* Bigger leeway */

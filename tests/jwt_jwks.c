@@ -103,6 +103,16 @@ START_TEST(load_fromurl)
 
 	ck_assert_int_gt(jwks_item_count(jwk_set), 0);
 }
+START_TEST(load_fromopenid)
+{
+	jwk_set_auto_t *jwk_set = NULL;
+
+	SET_OPS();
+
+	jwk_set = jwks_load_fromopenid(NULL, "file://" KEYDIR "/openid", 1);
+	ck_assert_ptr_nonnull(jwk_set);
+	ck_assert_int_gt(jwks_item_count(jwk_set), 0);
+}
 #else
 START_TEST(load_fromurl)
 {
@@ -209,6 +219,7 @@ static Suite *libjwt_suite(const char *title)
 	tcase_add_loop_test(tc_core, test_jwks_keyring_all_bad, 0, i);
 
 	tcase_add_loop_test(tc_core, load_fromurl, 0, i);
+	tcase_add_loop_test(tc_core, load_fromopenid, 0, i);
 
 	/* Some coverage attempts */
 	tcase_add_loop_test(tc_core, test_jwks_key_op_all_types, 0, i);

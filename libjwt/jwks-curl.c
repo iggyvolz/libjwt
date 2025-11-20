@@ -119,6 +119,43 @@ jwk_set_t *jwks_load_fromurl(jwk_set_t *jwk_set, const char *url, int verify)
 	return jwk_set;
 }
 
+jwk_set_t *jwks_load_fromopenid(jwk_set_t *jwk_set, const char *issuer, int verify)
+{
+	char *str = NULL;
+	size_t len;
+	json_auto_t *j_all = NULL;
+	json_t *j_jwks_uri = NULL;
+	json_error_t error;
+
+	if (issuer == NULL)
+		return NULL;
+
+	char *url = jwt_malloc(strlen(issuer) + 33);
+	if (url == NULL)
+		return NULL;
+
+	sprintf(url, "%s/.well-known/openid-configuration", issuer);
+
+	if (jwk_set == NULL)
+		jwk_set = jwks_create(NULL);
+	if (jwk_set == NULL)
+		return NULL; // LCOV_EXCL_LINE
+
+	str = __curl_get(jwk_set, url, &len, verify);
+	if (str != NULL) {
+		j_all = json_loadb(str, len, JSON_DECODE_ANY, &error);
+		if (json_is_object(j_all)) {
+			j_jwks_uri = json_object_get(j_all, "jwks_uri");
+			if (json_is_string(j_jwks_uri)) {
+				jwks_load_fromurl(jwk_set, json_string_value(j_jwks_uri), verify);
+			}
+		}
+		jwt_freemem(str);
+	}
+
+	return jwk_set;
+}
+
 #else
 
 jwk_set_t *jwks_load_fromurl(jwk_set_t *jwk_set, const char *url, int verify)
@@ -134,4 +171,8 @@ jwk_set_t *jwks_load_fromurl(jwk_set_t *jwk_set, const char *url, int verify)
 jwk_set_t *jwks_create_fromurl(const char *url, int verify)
 {
 	return jwks_load_fromurl(NULL, url, verify);
+}
+jwk_set_t *jwks_create_fromopenid(const char *issuer, int verify)
+{
+	return jwks_load_fromopenid(NULL, issuer, verify);
 }

@@ -29,7 +29,7 @@
 #endif
 
 #define JWT_CONFIG_DECLARE(__name) \
-	jwt_config_t __name = { NULL, JWT_ALG_NONE, NULL}
+	jwt_config_t __name = { NULL, JWT_ALG_NONE, NULL, 0}
 
 #define JWT_ERR_LEN 256
 
@@ -80,6 +80,8 @@ struct jwt_checker {
 	struct jwt_common c;
 	int error;
 	char error_msg[JWT_ERR_LEN];
+
+	int load_openid;
 };
 
 /*****************************/
@@ -231,7 +233,7 @@ jwt_value_error_t __getter(json_t *which, jwt_value_t *value);
 JWT_NO_EXPORT
 int jwt_parse(jwt_t *jwt, const char *token, unsigned int *len);
 JWT_NO_EXPORT
-jwt_t *jwt_verify_complete(jwt_t *jwt, const jwt_config_t *config,
+jwt_t *jwt_verify_complete(jwt_t *jwt, jwt_config_t *config,
 			   const char *token, unsigned int payload_len);
 
 JWT_NO_EXPORT
